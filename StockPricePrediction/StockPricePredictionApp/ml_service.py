@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import joblib
-from tensorflow.keras.models import load_model
+# Lazy import TensorFlow - only load when actually needed to avoid timeout
+# from tensorflow.keras.models import load_model
 from datetime import timedelta
 
 # Paths
@@ -19,6 +20,8 @@ class MLService:
         if cls._model is None:
             if os.path.exists(MODEL_PATH):
                 try:
+                    # Lazy import TensorFlow here
+                    from tensorflow.keras.models import load_model
                     cls._model = load_model(MODEL_PATH)
                     print("ML Model loaded successfully.")
                 except Exception as e:
