@@ -2439,8 +2439,11 @@ def alert_settings(request):
         
         return redirect('alert_settings')
     
-    # Get user's watchlist with alert info
-    watchlist_items = Watchlist.objects.filter(user=request.user).order_by('-created_at')
+    # Get user's watchlist with alert info (exclude empty tickers)
+    watchlist_items = Watchlist.objects.filter(
+        user=request.user,
+        ticker__isnull=False
+    ).exclude(ticker='').order_by('-created_at')
     
     # Get recent alerts
     recent_alerts = PriceAlert.objects.filter(
