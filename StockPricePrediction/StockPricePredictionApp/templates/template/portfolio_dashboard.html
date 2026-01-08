@@ -1,0 +1,978 @@
+{% extends "template/base.html" %}
+
+{% block title %}Portfolio Dashboard - InsightTracker{% endblock %}
+
+{% block content %}
+<div class="portfolio-wrapper" style="background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; margin: 0 -50vw; padding: 0 50vw; margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%);">
+<div class="container-fluid px-4 mt-5 py-4">
+    <!-- Header Section with Gradient -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="portfolio-header p-5 rounded-4 shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h1 class="display-3 text-white mb-2 fw-bold">
+                            <i class="fas fa-briefcase me-3"></i>My Portfolio
+                        </h1>
+                        <p class="text-white fs-5 mb-0 opacity-75">Track your investments with real-time performance metrics</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3 backdrop-blur">
+                            <p class="text-white mb-1 opacity-75 small">Last Updated</p>
+                            <h5 class="text-white mb-0" id="lastUpdated">Just now</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Summary Cards with Animations -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-lg h-100 overflow-hidden position-relative" style="background-color: #ffffff !important;">
+                <div class="card-body p-4">
+                    <div class="stat-icon-bg position-absolute" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small fw-semibold">Total Invested</h6>
+                            <h2 class="mb-0 fw-bold text-dark counter" data-target="{{ summary.total_invested }}">$0</h2>
+                        </div>
+                        <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-dollar-sign fa-lg text-white"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="fas fa-coins me-1"></i>Cost Basis
+                        </span>
+                    </div>
+                </div>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar" style="width: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-lg h-100 overflow-hidden position-relative" style="background-color: #ffffff !important;">
+                <div class="card-body p-4">
+                    <div class="stat-icon-bg position-absolute" style="background: linear-gradient(135deg, #06beb6 0%, #48b1bf 100%);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small fw-semibold">Current Value</h6>
+                            <h2 class="mb-0 fw-bold text-dark counter" data-target="{{ summary.current_value }}">$0</h2>
+                        </div>
+                        <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #06beb6 0%, #48b1bf 100%);">
+                            <i class="fas fa-chart-line fa-lg text-white"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="fas fa-chart-area me-1"></i>Market Value
+                        </span>
+                    </div>
+                </div>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar" style="width: 100%; background: linear-gradient(90deg, #06beb6 0%, #48b1bf 100%);"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-lg h-100 overflow-hidden position-relative" style="background-color: #ffffff !important;">
+                <div class="card-body p-4">
+                    <div class="stat-icon-bg position-absolute" style="background: linear-gradient(135deg, {% if summary.total_gain_loss >= 0 %}#11998e 0%, #38ef7d 100%{% else %}#ee0979 0%, #ff6a00 100%{% endif %});"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small fw-semibold">Total Gain/Loss</h6>
+                            <h2 class="mb-0 fw-bold {% if summary.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %} counter" data-target="{{ summary.total_gain_loss }}" data-prefix="$">$0</h2>
+                        </div>
+                        <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, {% if summary.total_gain_loss >= 0 %}#11998e 0%, #38ef7d 100%{% else %}#ee0979 0%, #ff6a00 100%{% endif %});">
+                            <i class="fas fa-{% if summary.total_gain_loss >= 0 %}arrow-up{% else %}arrow-down{% endif %} fa-lg text-white"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge {% if summary.total_gain_loss >= 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if summary.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %} me-2">
+                            <i class="fas fa-{% if summary.total_gain_loss >= 0 %}trending-up{% else %}trending-down{% endif %} me-1"></i>{{ summary.total_gain_loss_percent|floatformat:2 }}%
+                        </span>
+                    </div>
+                </div>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar {% if summary.total_gain_loss >= 0 %}bg-success{% else %}bg-danger{% endif %}" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-lg h-100 overflow-hidden position-relative" style="background-color: #ffffff !important;">
+                <div class="card-body p-4">
+                    <div class="stat-icon-bg position-absolute" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="text-muted mb-1 text-uppercase small fw-semibold">Diversification</h6>
+                            <h2 class="mb-0 fw-bold text-dark">{{ diversification_score|floatformat:0 }}<span class="fs-4">%</span></h2>
+                        </div>
+                        <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-pie-chart fa-lg text-white"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark me-2">
+                            <i class="fas fa-shield-alt me-1"></i>Portfolio Health
+                        </span>
+                    </div>
+                </div>
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar" style="width: {{ diversification_score }}%; background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Charts Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg h-100" style="background-color: #ffffff !important;">
+                <div class="card-header border-bottom py-3" style="background-color: #ffffff !important;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="fas fa-chart-area me-2 text-primary"></i>Portfolio Allocation
+                        </h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="showAllocationChart()">
+                                <i class="fas fa-pie-chart me-1"></i>Pie
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="showBarChart()">
+                                <i class="fas fa-chart-bar me-1"></i>Bar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="portfolioChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg h-100" style="background-color: #ffffff !important;">
+                <div class="card-header border-bottom py-3" style="background-color: #ffffff !important;">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-star me-2 text-warning"></i>Quick Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="stats-list">
+                        <div class="stat-item p-3 mb-3 rounded-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Total Holdings</span>
+                                <span class="fw-bold fs-4 text-dark">{{ summary.total_holdings }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-item p-3 mb-3 rounded-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Avg. Gain/Loss</span>
+                                <span class="fw-bold fs-5 {% if summary.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ summary.total_gain_loss_percent|floatformat:2 }}%
+                                </span>
+                            </div>
+                        </div>
+                        <div class="stat-item p-3 mb-3 rounded-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Portfolio ROI</span>
+                                <span class="fw-bold fs-5 {% if summary.total_gain_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if summary.total_invested > 0 %}
+                                        {{ summary.total_gain_loss_percent|floatformat:2 }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% if summary.holdings_data %}
+                        <div class="stat-item p-3 rounded-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="text-center text-white">
+                                <i class="fas fa-trophy fs-3 mb-2"></i>
+                                <p class="mb-1 small opacity-75">Top Performer</p>
+                                <h5 class="mb-0 fw-bold">{{ summary.best_performer.ticker|default:"N/A" }}</h5>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Holdings Table -->
+    <div class="card border-0 shadow-lg mb-5" style="background-color: #ffffff !important;">
+        <div class="card-header border-bottom py-4" style="background-color: #ffffff !important;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-list-ul me-2 text-primary"></i>Holdings 
+                    <span class="badge bg-primary rounded-pill ms-2">{{ summary.total_holdings }}</span>
+                </h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="sortTable()">
+                        <i class="fas fa-sort me-1"></i>Sort
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportPortfolio()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle" id="holdingsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Ticker</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Shares</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Avg Price</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Current</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Cost Basis</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Value</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Gain/Loss</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holding in summary.holdings_data %}
+                        <tr class="holding-row">
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="ticker-icon me-3 rounded-circle d-flex align-items-center justify-content-center fw-bold text-white" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        {{ holding.ticker|slice:":2" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ holding.ticker }}</div>
+                                        <small class="text-muted">{{ holding.shares|floatformat:2 }} shares</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-semibold">{{ holding.shares|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="text-muted">${{ holding.purchase_price|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-semibold">${{ holding.current_price|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="text-dark">${{ holding.cost_basis|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-bold text-dark">${{ holding.current_value|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="fw-bold {% if holding.gain_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ holding.gain_loss|floatformat:2 }}
+                                    </span>
+                                    <span class="badge {% if holding.gain_loss >= 0 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if holding.gain_loss >= 0 %}text-success{% else %}text-danger{% endif %} small">
+                                        <i class="fas fa-{% if holding.gain_loss >= 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>{{ holding.gain_loss_percent|floatformat:2 }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="btn btn-sm btn-light delete-holding-btn" 
+                                        data-holding-id="{{ holding.id }}" 
+                                        data-ticker="{{ holding.ticker }}"
+                                        data-bs-toggle="tooltip"
+                                        title="Remove holding">
+                                    <i class="fas fa-trash-alt text-danger"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
+                                    <h5 class="text-muted mb-2">No Holdings Yet</h5>
+                                    <p class="text-muted mb-0">Start building your portfolio by adding your first stock below!</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best & Worst Performers with Modern Design -->
+    {% if summary.best_performer and summary.worst_performer %}
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg overflow-hidden h-100 position-relative" style="background-color: #ffffff !important;">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);"></div>
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="performer-icon me-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                            <i class="fas fa-trophy fa-lg text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0 small text-uppercase fw-semibold">Best Performer</h6>
+                            <h3 class="mb-0 fw-bold text-dark">{{ summary.best_performer.ticker }}</h3>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted d-block mb-1">Gain</small>
+                                <h4 class="mb-0 text-success fw-bold">+${{ summary.best_performer.gain_loss|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted d-block mb-1">Return</small>
+                                <h4 class="mb-0 text-success fw-bold">+{{ summary.best_performer.gain_loss_percent|floatformat:2 }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg overflow-hidden h-100 position-relative" style="background-color: #ffffff !important;">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);"></div>
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="performer-icon me-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
+                            <i class="fas fa-chart-line-down fa-lg text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0 small text-uppercase fw-semibold">Worst Performer</h6>
+                            <h3 class="mb-0 fw-bold text-dark">{{ summary.worst_performer.ticker }}</h3>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted d-block mb-1">Loss</small>
+                                <h4 class="mb-0 text-danger fw-bold">${{ summary.worst_performer.gain_loss|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-light">
+                                <small class="text-muted d-block mb-1">Return</small>
+                                <h4 class="mb-0 text-danger fw-bold">{{ summary.worst_performer.gain_loss_percent|floatformat:2 }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Enhanced Add Holding Form -->
+    <div class="card border-0 shadow-lg mb-5" style="background-color: #ffffff !important;">
+        <div class="card-header py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h5 class="mb-0 text-white fw-bold">
+                <i class="fas fa-plus-circle me-2"></i>Add New Holding
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" action="{% url 'add_holding' %}" id="addHoldingForm">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="fas fa-tag me-1 text-primary"></i>Stock Ticker
+                        </label>
+                        <input type="text" name="ticker" class="form-control form-control-lg" placeholder="e.g., AAPL" required style="text-transform: uppercase;">
+                        <small class="text-muted">Symbol of the stock</small>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="fas fa-layer-group me-1 text-info"></i>Shares
+                        </label>
+                        <input type="number" step="0.0001" name="shares" class="form-control form-control-lg" placeholder="100" required>
+                        <small class="text-muted">Number of shares</small>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="fas fa-dollar-sign me-1 text-success"></i>Purchase Price
+                        </label>
+                        <input type="number" step="0.01" name="purchase_price" class="form-control form-control-lg" placeholder="150.00" required>
+                        <small class="text-muted">Price per share</small>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="fas fa-calendar me-1 text-warning"></i>Purchase Date
+                        </label>
+                        <input type="date" name="purchase_date" class="form-control form-control-lg" required>
+                        <small class="text-muted">Date of purchase</small>
+                    </div>
+                    <div class="col-lg-2 col-md-12 d-flex align-items-end">
+                        <button type="submit" class="btn btn-lg w-100 text-white fw-semibold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-plus me-2"></i>Add Stock
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-dark">
+                            <i class="fas fa-sticky-note me-1 text-secondary"></i>Notes (Optional)
+                        </label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Add any notes about this investment..."></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Recent Transactions -->
+    {% if recent_transactions %}
+    <div class="card border-0 shadow-lg" style="background-color: #ffffff !important;">
+        <div class="card-header border-bottom py-4" style="background-color: #ffffff !important;">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="fas fa-history me-2 text-info"></i>Recent Transactions
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Date</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Type</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted">Ticker</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Shares</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Price</th>
+                            <th class="border-0 px-4 py-3 text-uppercase small fw-semibold text-muted text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in recent_transactions %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                <span class="text-muted">{{ txn.date }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="badge {% if txn.type == 'BUY' %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if txn.type == 'BUY' %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                    <i class="fas fa-{% if txn.type == 'BUY' %}arrow-down{% else %}arrow-up{% endif %} me-1"></i>{{ txn.type }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="fw-bold text-dark">{{ txn.ticker }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-semibold">{{ txn.shares }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="text-muted">${{ txn.price|floatformat:2 }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-end">
+                                <span class="fw-bold text-dark">${{ txn.total_amount|floatformat:2 }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Animate counters on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Counter animation
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const prefix = counter.getAttribute('data-prefix') || '';
+        let current = 0;
+        const increment = target / 50;
+        const isNegative = target < 0;
+        
+        const updateCounter = () => {
+            current += increment;
+            if ((isNegative && current <= target) || (!isNegative && current >= target)) {
+                counter.textContent = prefix + target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } else {
+                counter.textContent = prefix + current.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                requestAnimationFrame(updateCounter);
+            }
+        };
+        
+        updateCounter();
+    });
+    
+    // Update last updated time
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Create portfolio chart
+    createPortfolioChart();
+    
+    // Add hover effects to cards
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+
+// Create portfolio allocation chart
+let portfolioChart = null;
+
+function createPortfolioChart() {
+    const ctx = document.getElementById('portfolioChart');
+    if (!ctx) return;
+    
+    const holdings = {{ summary.holdings_data|safe|default:"[]" }};
+    if (holdings.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-5"><i class="fas fa-chart-pie fa-3x text-muted mb-3"></i><p class="text-muted">Add holdings to see portfolio allocation</p></div>';
+        return;
+    }
+    
+    const tickers = holdings.map(h => h.ticker);
+    const values = holdings.map(h => h.current_value);
+    
+    const colors = [
+        'rgba(102, 126, 234, 0.8)',
+        'rgba(118, 75, 162, 0.8)',
+        'rgba(6, 190, 182, 0.8)',
+        'rgba(72, 177, 191, 0.8)',
+        'rgba(17, 153, 142, 0.8)',
+        'rgba(56, 239, 125, 0.8)',
+        'rgba(240, 147, 251, 0.8)',
+        'rgba(245, 87, 108, 0.8)'
+    ];
+    
+    portfolioChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: tickers,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 12,
+                            family: "'Inter', sans-serif"
+                        },
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const value = data.datasets[0].data[i];
+                                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return {
+                                        text: `${label}: $${value.toFixed(2)} (${percentage}%)`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(2);
+                            return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function showAllocationChart() {
+    if (portfolioChart) {
+        portfolioChart.destroy();
+    }
+    createPortfolioChart();
+    document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('button').classList.add('active');
+}
+
+function showBarChart() {
+    const ctx = document.getElementById('portfolioChart');
+    if (!ctx) return;
+    
+    const holdings = {{ summary.holdings_data|safe|default:"[]" }};
+    const tickers = holdings.map(h => h.ticker);
+    const values = holdings.map(h => h.current_value);
+    
+    if (portfolioChart) {
+        portfolioChart.destroy();
+    }
+    
+    portfolioChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: tickers,
+            datasets: [{
+                label: 'Current Value',
+                data: values,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Value: $${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('button').classList.add('active');
+}
+
+// Event delegation for delete buttons
+document.addEventListener('click', function(event) {
+    if (event.target.closest('.delete-holding-btn')) {
+        const btn = event.target.closest('.delete-holding-btn');
+        const holdingId = btn.dataset.holdingId;
+        const ticker = btn.dataset.ticker;
+        
+        if (confirm(`Are you sure you want to remove ${ticker} from your portfolio?`)) {
+            window.location.href = `/portfolio/delete/${holdingId}/`;
+        }
+    }
+});
+
+// Auto-uppercase ticker input
+const tickerInput = document.querySelector('input[name="ticker"]');
+if (tickerInput) {
+    tickerInput.addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase();
+    });
+}
+
+// Sort table function
+let sortDirection = 1;
+function sortTable() {
+    const table = document.getElementById('holdingsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr.holding-row'));
+    
+    rows.sort((a, b) => {
+        const aValue = parseFloat(a.cells[6].textContent.replace(/[^0-9.-]/g, ''));
+        const bValue = parseFloat(b.cells[6].textContent.replace(/[^0-9.-]/g, ''));
+        return sortDirection * (bValue - aValue);
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+    sortDirection *= -1;
+}
+
+// Export portfolio function
+function exportPortfolio() {
+    alert('Export functionality coming soon!');
+}
+
+// Form validation
+const addHoldingForm = document.getElementById('addHoldingForm');
+if (addHoldingForm) {
+    addHoldingForm.addEventListener('submit', function(e) {
+        const ticker = this.querySelector('input[name="ticker"]').value;
+        const shares = parseFloat(this.querySelector('input[name="shares"]').value);
+        const price = parseFloat(this.querySelector('input[name="purchase_price"]').value);
+        
+        if (shares <= 0) {
+            e.preventDefault();
+            alert('Number of shares must be greater than 0');
+            return;
+        }
+        
+        if (price <= 0) {
+            e.preventDefault();
+            alert('Purchase price must be greater than 0');
+            return;
+        }
+    });
+}
+</script>
+
+<style>
+/* Portfolio Page Override Styles - Force Light Theme */
+.portfolio-wrapper {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+.portfolio-wrapper .card {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+.portfolio-wrapper .table {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+.portfolio-wrapper .table thead th {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+}
+
+.portfolio-wrapper .table tbody tr {
+    background-color: #ffffff !important;
+}
+
+.portfolio-wrapper .text-dark {
+    color: #212529 !important;
+}
+
+.portfolio-wrapper .text-muted {
+    color: #6c757d !important;
+}
+
+.portfolio-wrapper .form-control {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border: 1px solid #ced4da !important;
+}
+
+.portfolio-wrapper .form-label {
+    color: #212529 !important;
+}
+
+/* Enhanced Portfolio Styles */
+.portfolio-header {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.portfolio-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+}
+
+.portfolio-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+}
+
+/* Stat Cards */
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon-bg {
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    opacity: 0.1;
+    filter: blur(50px);
+}
+
+/* Counter Animation */
+.counter {
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+/* Table Enhancements */
+.holding-row {
+    transition: all 0.2s ease;
+}
+
+.holding-row:hover {
+    background-color: rgba(102, 126, 234, 0.05) !important;
+    transform: scale(1.01);
+}
+
+.ticker-icon {
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.holding-row:hover .ticker-icon {
+    transform: rotate(360deg);
+}
+
+/* Form Enhancements */
+.portfolio-wrapper .form-control:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+.form-control-lg {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+/* Card Animations */
+.portfolio-wrapper .card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.empty-state i {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Progress bars */
+.progress {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Performer cards */
+.performer-icon {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .portfolio-header {
+        padding: 2rem !important;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Button hover effects */
+.portfolio-wrapper .btn {
+    transition: all 0.3s ease;
+}
+
+.portfolio-wrapper .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Badge animations */
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Table light theme enforcement */
+.portfolio-wrapper .table-hover tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.05) !important;
+}
+
+.portfolio-wrapper .card-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.portfolio-wrapper .card-body {
+    background-color: #ffffff !important;
+}
+</style>
+{% endblock %}

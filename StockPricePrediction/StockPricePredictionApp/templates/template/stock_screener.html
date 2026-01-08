@@ -1,0 +1,319 @@
+{% extends "template/base.html" %}
+
+{% block title %}Stock Screener - InsightTracker{% endblock %}
+
+{% block content %}
+<div class="container mt-5 py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-2" style="color: #ffffff; font-weight: 700;">
+                <i class="fas fa-filter me-3" style="color: #8b5cf6;"></i>Stock Screener
+            </h1>
+            <p style="color: #e5e7eb; font-size: 1.1rem;">Filter and discover stocks based on your investment criteria</p>
+        </div>
+    </div>
+
+    <!-- Preset Screens -->
+    <div class="card bg-dark border-0 shadow-lg mb-4">
+        <div class="card-header bg-dark border-bottom border-secondary py-3">
+            <h5 class="mb-0 text-white">
+                <i class="fas fa-magic me-2"></i>Quick Presets
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                {% for key, preset in presets.items %}
+                <div class="col-lg-4 col-md-6">
+                    <button class="btn w-100 preset-btn" onclick="loadPreset('{{ key }}')" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border: 2px solid #4b5563; padding: 1.5rem; transition: all 0.3s; min-height: 120px; display: flex; align-items: center; justify-content: flex-start;">
+                        <div class="d-flex align-items-center w-100">
+                            <div class="me-4" style="min-width: 50px; text-align: center;">
+                                <i class="fas fa-{% if 'growth' in key %}rocket{% elif 'value' in key %}gem{% elif 'dividend' in key %}coins{% elif 'momentum' in key %}chart-line{% elif 'tech' in key %}microchip{% else %}dollar-sign{% endif %} fa-2x" style="color: #8b5cf6;"></i>
+                            </div>
+                            <div class="flex-grow-1 text-start">
+                                <div class="fw-bold mb-2" style="color: #ffffff; font-size: 1.15rem;">{{ preset.name }}</div>
+                                <small style="color: #d1d5db; line-height: 1.5; display: block;">{{ preset.description }}</small>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Filters -->
+    <div class="card bg-dark border-0 shadow-lg mb-4">
+        <div class="card-header bg-dark border-bottom border-secondary py-3">
+            <h5 class="mb-0 text-white">
+                <i class="fas fa-sliders-h me-2"></i>Custom Filters
+            </h5>
+        </div>
+        <div class="card-body">
+            <form id="screenerForm">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Market Cap ($B)</label>
+                        <input type="number" name="min_market_cap" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Max Market Cap ($B)</label>
+                        <input type="number" name="max_market_cap" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 100">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min P/E Ratio</label>
+                        <input type="number" step="0.1" name="min_pe_ratio" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 10">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Max P/E Ratio</label>
+                        <input type="number" step="0.1" name="max_pe_ratio" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 25">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Price ($)</label>
+                        <input type="number" step="0.01" name="min_price" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 10">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Max Price ($)</label>
+                        <input type="number" step="0.01" name="max_price" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 500">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Dividend Yield (%)</label>
+                        <input type="number" step="0.01" name="min_dividend_yield" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 2">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Volume</label>
+                        <input type="number" name="min_volume" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 1000000">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Day Change (%)</label>
+                        <input type="number" step="0.01" name="min_day_change" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 5">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Week Change (%)</label>
+                        <input type="number" step="0.01" name="min_week_change" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 10">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min ROE (%)</label>
+                        <input type="number" step="0.01" name="min_roe" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 15">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">Min Profit Margin (%)</label>
+                        <input type="number" step="0.01" name="min_profit_margin" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 10">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Run Screen
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-redo me-2"></i>Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-white mt-3">Screening stocks...</p>
+    </div>
+
+    <!-- Results Table -->
+    <div id="results"></div>
+</div>
+
+<script>
+function loadPreset(presetName) {
+    showLoading();
+    fetch(`/screener/preset/${presetName}/`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                displayResults(data.results, data.preset.name);
+            } else {
+                alert('Error loading preset: ' + data.error);
+            }
+            hideLoading();
+        })
+        .catch(err => {
+            alert('Error: ' + err);
+            hideLoading();
+        });
+}
+
+document.getElementById('screenerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const criteria = {};
+    
+    for (let [key, value] of formData.entries()) {
+        if (value) {
+            // Convert to appropriate type
+            if (key.includes('market_cap')) {
+                criteria[key] = parseFloat(value) * 1000000000; // Convert to dollars
+            } else {
+                criteria[key] = parseFloat(value);
+            }
+        }
+    }
+    
+    showLoading();
+    fetch('/screener/run/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({criteria})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            displayResults(data.results, 'Custom Screen Results');
+        } else {
+            alert('Error: ' + data.error);
+        }
+        hideLoading();
+    })
+    .catch(err => {
+        alert('Error: ' + err);
+        hideLoading();
+    });
+});
+
+function displayResults(stocks, title) {
+    if (!stocks || stocks.length === 0) {
+        document.getElementById('results').innerHTML = `
+            <div class="card bg-dark border-0 shadow-lg">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-white-50 mb-3"></i>
+                    <h5 class="text-white">No Results Found</h5>
+                    <p class="text-white-50">Try adjusting your filters</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const html = `
+        <div class="card bg-dark border-0 shadow-lg">
+            <div class="card-header bg-dark border-bottom border-secondary py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-list me-2"></i>${title} (${stocks.length} stocks)
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportResults()">
+                        <i class="fas fa-download me-2"></i>Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr class="text-white-50">
+                                <th class="border-0">Ticker</th>
+                                <th class="border-0">Name</th>
+                                <th class="border-0">Price</th>
+                                <th class="border-0">Market Cap</th>
+                                <th class="border-0">P/E</th>
+                                <th class="border-0">Dividend</th>
+                                <th class="border-0">Day %</th>
+                                <th class="border-0">Year %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${stocks.map(s => `
+                                <tr>
+                                    <td>
+                                        <a href="/details/${s.ticker}" class="text-primary fw-bold text-decoration-none">
+                                            ${s.ticker}
+                                        </a>
+                                    </td>
+                                    <td class="text-white">${s.name}</td>
+                                    <td class="text-white">$${s.current_price.toFixed(2)}</td>
+                                    <td class="text-white">$${(s.market_cap/1e9).toFixed(2)}B</td>
+                                    <td class="text-white">${s.pe_ratio ? s.pe_ratio.toFixed(2) : 'N/A'}</td>
+                                    <td class="text-white">${s.dividend_yield ? (s.dividend_yield * 100).toFixed(2) + '%' : 'N/A'}</td>
+                                    <td class="${s.day_change_percent >= 0 ? 'text-success' : 'text-danger'}">
+                                        ${s.day_change_percent >= 0 ? '+' : ''}${s.day_change_percent.toFixed(2)}%
+                                    </td>
+                                    <td class="${s.year_change_percent >= 0 ? 'text-success' : 'text-danger'}">
+                                        ${s.year_change_percent >= 0 ? '+' : ''}${s.year_change_percent.toFixed(2)}%
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('results').innerHTML = html;
+}
+
+function resetForm() {
+    document.getElementById('screenerForm').reset();
+    document.getElementById('results').innerHTML = '';
+}
+
+function showLoading() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loadingIndicator').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+}
+
+function exportResults() {
+    alert('CSV export feature coming soon!');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.preset-btn:hover {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) !important;
+    border-color: #8b5cf6 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3) !important;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(139, 92, 246, 0.15) !important;
+}
+.form-control:focus {
+    background-color: #1f2937 !important;
+    border-color: #8b5cf6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25) !important;
+}
+.card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+}
+</style>
+{% endblock %}

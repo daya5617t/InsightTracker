@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Positioning Example</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            height: 1500px; /* To enable scrolling for fixed and sticky examples */
+        }
+
+        .box {
+            width: 100px;
+            height: 100px;
+            background-color: lightblue;
+            border: 2px solid steelblue;
+            margin: 10px;
+            text-align: center;
+            line-height: 100px;
+            font-weight: bold;
+        }
+
+        /* Static Positioning (Default) */
+        .static-box {
+            /* position: static; (This is the default, so it's often omitted) */
+            background-color: lightcoral;
+        }
+
+        /* Relative Positioning */
+        .relative-box {
+            position: relative;
+            top: 20px;
+            left: 30px;
+            background-color: lightgreen;
+        }
+
+        /* Absolute Positioning */
+        .container {
+            position: relative; /* Crucial for absolute positioning of children */
+            width: 300px;
+            height: 200px;
+            border: 2px solid purple;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .absolute-box {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background-color: lightgoldenrodyellow;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+        }
+
+        /* Fixed Positioning */
+        .fixed-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: lightsalmon;
+            z-index: 100; /* To ensure it stays on top */
+        }
+
+        /* Sticky Positioning */
+        .sticky-header {
+            position: sticky;
+            top: 0; /* Sticks to the top of the viewport when scrolled */
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CSS Positioning Examples</h1>
+
+    <div class="box static-box">Static</div>
+    <p>This is a paragraph following the static box.</p>
+
+    <div class="box relative-box">Relative</div>
+    <p>This paragraph is affected by the relative box's original space.</p>
+
+    <div class="container">
+        <p>This is a container with relative positioning.</p>
+        <div class="box absolute-box">Absolute</div>
+    </div>
+    <p>This paragraph is not affected by the absolute box, as it's out of the flow.</p>
+
+    <div class="box fixed-box">Fixed</div>
+    <p>Scroll down to see the fixed box remain in place.</p>
+
+    <div class="sticky-header">Sticky Header</div>
+    <p>Scroll down to see the sticky header stick to the top.</p>
+
+    <div style="height: 800px; background-color: #eee; padding: 20px;">
+        <p>More content to enable scrolling.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    </div>
+
+</body>
+</html>

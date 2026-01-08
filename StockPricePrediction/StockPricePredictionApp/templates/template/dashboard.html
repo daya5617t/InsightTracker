@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Dashboard - InsightTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header { background:linear-gradient(135deg, rgba(59,130,246,.08), rgba(99,102,241,.08)); border:1px solid var(--border-color); border-radius:24px; padding:2.25rem 2.4rem; margin-bottom:2.25rem; position:relative; overflow:hidden; }
+    .dashboard-header:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at top left, rgba(59,130,246,.25), transparent 65%); opacity:.35; pointer-events:none; }
+    .welcome-text { font-size:clamp(1.9rem,4vw,2.4rem); font-weight:800; margin:0 0 .6rem; background:var(--gradient-accent); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:.5px; }
+    .floating-shapes { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .floating-shapes .shape { position:absolute; border-radius:50%; filter:blur(40px); opacity:.12; animation: drift 30s linear infinite; }
+    .floating-shapes .shape:nth-child(1){ width:320px; height:320px; top:-120px; left:-120px; background:var(--primary-color); }
+    .floating-shapes .shape:nth-child(2){ width:260px; height:260px; bottom:-140px; right:-100px; background:var(--accent-color); animation-delay:10s; }
+    @keyframes drift { 0% { transform:translate3d(0,0,0);} 50% { transform:translate3d(40px,30px,0);} 100% { transform:translate3d(0,0,0);} }
+    .stat-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; padding:1.25rem 1.1rem 1.1rem; display:flex; flex-direction:column; gap:.35rem; position:relative; overflow:hidden; }
+    .stat-card:before { content:""; position:absolute; inset:0; background:linear-gradient(145deg, rgba(59,130,246,.15), rgba(99,102,241,.15)); opacity:0; transition:.4s; }
+    .stat-card:hover:before { opacity:.25; }
+    .stat-value { font-size:1.6rem; font-weight:700; }
+    .stat-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.6px; font-weight:600; color:var(--text-secondary); }
+    .stat-icon { width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.15rem; background:#111c28; color:var(--primary-color); box-shadow:0 0 0 1px var(--border-color); }
+    .stock-price { font-size:1.25rem; font-weight:700; }
+    .quick-actions { display:grid; gap:1.1rem; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
+    .action-btn { background:#111c28; border:1px solid var(--border-color); border-radius:18px; padding:1.2rem .9rem 1rem; display:flex; flex-direction:column; align-items:center; gap:.65rem; text-decoration:none; color:var(--text-primary); transition:.35s; position:relative; overflow:hidden; }
+    .action-btn:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(59,130,246,.35), transparent 70%); opacity:0; transition:.4s; }
+    .action-btn:hover { transform:translateY(-4px); border-color:var(--primary-color); color:var(--primary-color); }
+    .action-btn:hover:before { opacity:.25; }
+    .action-btn i { font-size:1.55rem; }
+    .stock-card { animation:none; }
+    .fade-seq .stock-card { opacity:0; transform:translateY(18px); transition:.6s cubic-bezier(.25,.8,.25,1); }
+    .fade-seq .stock-card.appear { opacity:1; transform:translateY(0); }
+    .dashboard-content { position:relative; z-index:1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="floating-shapes"><div class="shape"></div><div class="shape"></div></div>
+
+<div class="dashboard-content">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1 class="welcome-text">
+            Welcome back, {{ user.username|title }}! 👋
+        </h1>
+        <p class="text-muted">Here's your personalized stock market overview</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4 fade-seq" id="stats-container">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value">{{ total_stocks_tracked }}</div>
+                <div class="stat-label">Stocks Tracked</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-arrow-trend-up"></i>
+                </div>
+                <div class="stat-value">
+                    {% if quick_stats %}
+                        {% for stat in quick_stats %}
+                            {% if stat.is_positive %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    {% else %}0{% endif %}
+                </div>
+                <div class="stat-label">Gaining Stocks</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Alerts Set</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value">{{ user.date_joined|date:"M Y" }}</div>
+                <div class="stat-label">Member Since</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Watchlist Section -->
+    <div class="row mb-4 fade-seq">
+        <div class="col-12">
+            <h3 class="heading-section mb-4">
+                <i class="fas fa-star text-warning"></i> My Watchlist
+            </h3>
+        </div>
+        {% if watchlist %}
+            {% for item in watchlist %}
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+                <div class="stock-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="stock-symbol">{{ item.ticker }}</div>
+                        <a href="{% url 'remove_from_watchlist' item.ticker %}" class="text-danger remove-watchlist" title="Remove from Watchlist" data-ticker="{{ item.ticker }}">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                    <div class="stock-price">${{ item.price|floatformat:2 }}</div>
+                    <div class="stock-change {% if item.change >= 0 %}positive{% else %}negative{% endif %}">
+                        <i class="fas fa-arrow-{% if item.change >= 0 %}up{% else %}down{% endif %}"></i>
+                        <span>${{ item.change|floatformat:2 }} ({{ item.change_pct|floatformat:2 }}%)</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'details' item.ticker %}" class="btn btn-outline" style="width: 100%;">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You haven't added any stocks to your watchlist yet. 
+                    <a href="{% url 'all_stocks' %}" class="alert-link">Browse stocks</a> to add some!
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Market Analytics Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="heading-section mb-4">
+                <i class="fas fa-chart-line"></i> Market Analytics
+            </h3>
+        </div>
+        <div class="col-xl-8 col-lg-12 mb-3">
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.5rem;">
+                <h4 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-secondary);">
+                    <i class="fas fa-chart-area"></i> Watchlist Performance Trend
+                </h4>
+                <canvas id="watchlistTrendChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+        <div class="col-xl-4 col-lg-12 mb-3">
+            <div style="background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(99,102,241,.08)); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.5rem; height: 100%;">
+                <h4 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-secondary);">
+                    <i class="fas fa-bolt"></i> Quick Insights
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px;">Top Gainer</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #10b981;">+12.5%</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">NVDA</div>
+                    </div>
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px;">Alert Rate</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color);">87%</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Success</div>
+                    </div>
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px;">Avg Response</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-color);">2.3 min</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Alert Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stock Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="heading-section mb-4">
+                <i class="fas fa-fire"></i> Trending Stocks
+            </h3>
+        </div>
+        {% if quick_stats %}
+            {% for stat in quick_stats %}
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
+                <div class="stock-card">
+                    <div class="stock-symbol">{{ stat.symbol }}</div>
+                    <div class="stock-price">${{ stat.price|floatformat:2 }}</div>
+                    <div class="stock-change {% if stat.is_positive %}positive{% else %}negative{% endif %}">
+                        <i class="fas fa-arrow-{% if stat.is_positive %}up{% else %}down{% endif %}"></i>
+                        <span>${{ stat.change|floatformat:2 }} ({{ stat.percent_change|floatformat:2 }}%)</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'details' stat.symbol %}" class="btn btn-outline" style="width: 100%;">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="stock-card text-center">
+                    <p class="text-muted">Loading stock data...</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="heading-section mb-4">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </h3>
+        </div>
+        <div class="col-12">
+            <div class="quick-actions">
+                <a href="{% url 'predict' %}" class="action-btn">
+                    <i class="fas fa-crystal-ball"></i>
+                    <span>Predict Prices</span>
+                </a>
+                <a href="{% url 'all_stocks' %}" class="action-btn">
+                    <i class="fas fa-search"></i>
+                    <span>Browse Stocks</span>
+                </a>
+                <a href="{% url 'compare' %}" class="action-btn">
+                    <i class="fas fa-arrow-right-arrow-left"></i>
+                    <span>Compare Stocks</span>
+                </a>
+                <a href="{% url 'home' %}" class="action-btn">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Market Analysis</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add entrance animations on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-seq .stock-card').forEach((card, idx) => {
+        setTimeout(()=>observer.observe(card), idx * 90);
+    });
+
+    // Watchlist Performance Trend Chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('watchlistTrendChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: [10000, 10250, 10180, 10420, 10650],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: '#888',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#888'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // Add real-time update effect
+    // Soft pulse to indicate live data capability
+    setInterval(function() {
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.style.boxShadow = '0 0 0 1px var(--border-color), 0 0 0 4px rgba(59,130,246,0.15)';
+            setTimeout(() => { card.style.boxShadow = ''; }, 280);
+        });
+    }, 25000);
+
+    // Watchlist management with notifications
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle watchlist removal
+        document.querySelectorAll('.remove-watchlist').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const ticker = this.dataset.ticker;
+                const url = this.href;
+
+                // Show loading state
+                window.loadingSystem.showButtonLoading(this, 'Removing...');
+
+                // Perform the action
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Remove the card with animation
+                        const card = this.closest('.col-xl-3, .col-lg-6, .col-md-6, .col-sm-12');
+                        card.style.transform = 'scale(0.8)';
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.remove();
+                            window.notifications.success(`${ticker} removed from watchlist`, 'Success');
+                        }, 300);
+                    } else {
+                        throw new Error('Failed to remove from watchlist');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    window.notifications.error('Failed to remove from watchlist', 'Error');
+                    window.loadingSystem.hideButtonLoading(this);
+                });
+            });
+        });
+
+        // Welcome notification for new users
+        const welcomeShown = localStorage.getItem('welcome_shown');
+        if (!welcomeShown) {
+            setTimeout(() => {
+                window.notifications.info(
+                    'Welcome to your dashboard! Here you can track your favorite stocks and view market insights.',
+                    'Welcome to InsightTracker'
+                );
+                localStorage.setItem('welcome_shown', 'true');
+            }, 2000);
+        }
+
+        // Periodic data refresh notification
+        setInterval(() => {
+            window.notifications.info('Market data updated', 'Live Update', { duration: 2000 });
+        }, 300000); // Every 5 minutes
+    });
+</script>
+{% endblock %}
+

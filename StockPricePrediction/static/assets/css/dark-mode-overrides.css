@@ -1,0 +1,108 @@
+/* Global Dark Mode Overrides */
+
+/* Bootstrap and vendor overrides */
+.table {
+    color: var(--text-primary) !important;
+    background: var(--surface) !important;
+}
+
+.table th,
+.table td {
+    color: var(--text-primary) !important;
+    background: var(--surface) !important;
+    border-color: var(--border-medium) !important;
+}
+
+/* Form controls */
+.form-group label {
+    color: var(--text-primary) !important;
+}
+
+/* Card overrides */
+.card {
+    background: var(--surface) !important;
+    border-color: var(--border-medium) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header {
+    background: var(--surface-elevated) !important;
+    border-color: var(--border-medium) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-body {
+    color: var(--text-primary) !important;
+}
+
+/* Text color enforcement */
+.bg-white {
+    background: var(--surface) !important;
+}
+
+.text-dark {
+    color: var(--text-primary) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Navigation overrides for better visibility */
+.navbar .nav-link,
+.navbar .nav-link span,
+.navbar .nav-link i {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: #ffffff !important;
+    background: rgba(139, 92, 246, 0.2) !important;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
+}
+
+.navbar .nav-link.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
+
+/* Additional specific overrides */
+.nav-links a,
+.nav-links a span,
+.nav-links a i,
+a.nav-link,
+a.nav-link span,
+a.nav-link i {
+    color: #ffffff !important;
+}
+
+/* Brand text visibility - FORCE WHITE COLOR */
+.navbar .brand-name,
+.navbar-brand .brand-name,
+.brand-logo .brand-name,
+a .brand-name {
+    color: #ffffff !important;
+    background: none !important;
+    background-image: none !important;
+    background-clip: initial !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-fill-color: #ffffff !important;
+    text-shadow: 0 2px 12px rgba(139, 92, 246, 0.6) !important;
+    font-weight: 800 !important;
+}
+
+.navbar .brand-tagline,
+.navbar-brand .brand-tagline,
+.brand-logo .brand-tagline,
+a .brand-tagline {
+    color: #a78bfa !important;
+    background: none !important;
+    background-image: none !important;
+    -webkit-text-fill-color: #a78bfa !important;
+    text-shadow: 0 1px 4px rgba(129, 140, 248, 0.4) !important;
+}

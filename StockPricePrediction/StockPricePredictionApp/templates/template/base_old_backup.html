@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Advanced AI-powered stock analysis and predictions">
+    <meta name="keywords" content="stock analysis, AI predictions, financial insights, market data">
+
+    <!-- Modern Fonts -->    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <title>{% block title %}InsightTracker - AI-Powered Stock Analysis{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'assets/css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/utilities.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/layout.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Modern Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="/" class="navbar-brand">
+                    <div class="brand-logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="12" width="28" height="16" rx="4" fill="url(#brandGradient)"/>
+                                <path d="M8 20L12 16L16 20L20 14L24 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="8" cy="20" r="2" fill="white"/>
+                                <circle cx="12" cy="16" r="2" fill="white"/>
+                                <circle cx="16" cy="20" r="2" fill="white"/>
+                                <circle cx="20" cy="14" r="2" fill="white"/>
+                                <circle cx="24" cy="18" r="2" fill="white"/>
+                                <defs>
+                                    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#8b5cf6"/>
+                                        <stop offset="100%" style="stop-color:#06b6d4"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="brand-text">
+                            <span class="brand-name">InsightTracker</span>
+                            <span class="brand-tagline">AI Analytics</span>
+                        </div>
+                    </div>
+                </a>
+
+                <div class="nav-links">
+                    {% if user.is_authenticated %}
+                    <a href="/dashboard/" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/analytics-map/" class="nav-link {% if request.resolver_match.url_name == 'analytics_map' %}active{% endif %}">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Analytics</span>
+                    </a>
+                    {% endif %}
+                    <a href="/" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="/news/" class="nav-link {% if request.resolver_match.url_name == 'news' %}active{% endif %}">
+                        <i class="fas fa-newspaper"></i>
+                        <span>News</span>
+                    </a>
+                    <a href="/compare/" class="nav-link {% if request.resolver_match.url_name == 'compare' %}active{% endif %}">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Compare</span>
+                    </a>
+                    <a href="/predict/" class="nav-link {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
+                        <i class="fas fa-crystal-ball"></i>
+                        <span>Predict</span>
+                    </a>
+                    <a href="/all_stocks/" class="nav-link {% if request.resolver_match.url_name == 'all_stocks' %}active{% endif %}">
+                        <i class="fas fa-search"></i>
+                        <span>Browse</span>
+                    </a>
+                </div>
+
+                <div class="nav-actions">
+                    <button id="themeToggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    
+                    {% if user.is_authenticated %}
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            {{ user.username|first|upper }}
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ user.username|title }}</span>
+                            <span class="user-role">Investor</span>
+                        </div>
+                        <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-{% if message.tags == 'error' %}circle-exclamation{% elif message.tags == 'success' %}circle-check{% elif message.tags == 'warning' %}triangle-exclamation{% else %}circle-info{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Modern Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <h3 class="footer-title">InsightTracker</h3>
+                        <p class="footer-description">
+                            Advanced AI-powered stock analysis and predictions. 
+                            Make informed investment decisions with cutting-edge market insights.
+                        </p>
+                        <div class="footer-social">
+                            <a href="#" class="social-link" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="GitHub">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="Discord">
+                                <i class="fab fa-discord"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">Platform</h4>
+                    <ul class="footer-links">
+                        <li><a href="/">Dashboard</a></li>
+                        <li><a href="/analytics-map/">Analytics</a></li>
+                        <li><a href="/news/">Market News</a></li>
+                        <li><a href="/compare/">Stock Compare</a></li>
+                        <li><a href="/predict/">AI Predictions</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">API Documentation</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Tutorials</a></li>
+                        <li><a href="#">Market Data</a></li>
+                        <li><a href="#">Status Page</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Careers</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 InsightTracker. All rights reserved.</p>
+                </div>
+                <div class="footer-legal">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/live-updates.js' %}"></script>
+    
+    <script>
+        // Enhanced Message Management
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.alert');
+            messages.forEach((message, index) => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(() => message.remove(), 300);
+                }, index * 150);
+            });
+        }, 4000);
+
+        // Modern Theme Toggle
+        (function() {
+            const STORAGE_KEY = 'theme-preference';
+            const root = document.documentElement;
+            const toggleBtn = document.getElementById('themeToggle');
+            
+            function applyTheme(theme) {
+                root.setAttribute('data-theme', theme);
+                localStorage.setItem(STORAGE_KEY, theme);
+                const icon = toggleBtn?.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas ' + (theme === 'light' ? 'fa-moon' : 'fa-sun');
+                }
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-label', 
+                        theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+                    );
+                }
+            }
+            
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+            applyTheme(saved || (prefersLight ? 'light' : 'dark'));
+            
+            toggleBtn?.addEventListener('click', () => {
+                const current = root.getAttribute('data-theme') || 'dark';
+                applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        })();
+
+        // Enhanced Navigation Active State
+        (function() {
+            const current = window.location.pathname.replace(/\/$/, '') || '/';
+            const links = Array.from(document.querySelectorAll('.nav-link'));
+            
+            // Remove any existing active states
+            links.forEach(link => link.classList.remove('active'));
+            
+            // Find and activate the matching link
+            const activeLink = links.find(link => {
+                const href = link.getAttribute('href').replace(/\/$/, '') || '/';
+                return href === current;
+            }) || links.find(link => {
+                const href = link.getAttribute('href').replace(/\/$/, '') || '/';
+                return current.startsWith(href) && href !== '/';
+            });
+            
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        })();
+
+        // Smooth Scroll for Anchor Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                    if (entry.target.classList.contains('fade-up')) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-up elements
+        document.querySelectorAll('.fade-up, .fade-scale, .slide-right').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

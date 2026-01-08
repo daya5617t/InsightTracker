@@ -1,0 +1,685 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stock Analysis - InsightTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-3xl);
+        padding: var(--space-10) var(--space-8);
+        margin-bottom: var(--space-12);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+
+    .page-title {
+        font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
+        font-weight: 800;
+        margin: 0 0 var(--space-3);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.1;
+    }
+
+    .page-subtitle {
+        font-size: var(--text-lg);
+        color: var(--text-secondary);
+        margin: 0;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.5;
+    }
+
+    .filters-section {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-6);
+        margin-bottom: var(--space-8);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-4);
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .filter-label {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .filter-input {
+        padding: var(--space-3) var(--space-4);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: var(--bg-light);
+        color: var(--text-primary);
+        font-size: var(--text-base);
+        transition: all 0.3s ease;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        background: white;
+    }
+
+    .stocks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: var(--space-6);
+        margin-bottom: var(--space-12);
+    }
+
+    .stock-item {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-6);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .stock-item:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-color);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .stock-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.05), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .stock-item:hover::before {
+        left: 100%;
+    }
+
+    .stock-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-4);
+    }
+
+    .stock-info {
+        flex: 1;
+    }
+
+    .stock-symbol {
+        font-size: var(--text-xl);
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0 0 var(--space-1);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stock-name {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .stock-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-xl);
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: var(--text-lg);
+        font-weight: 700;
+        text-transform: uppercase;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stock-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-4);
+        margin-bottom: var(--space-4);
+    }
+
+    .metric {
+        text-align: center;
+        padding: var(--space-3);
+        background: rgba(139, 92, 246, 0.05);
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(139, 92, 246, 0.1);
+    }
+
+    .metric-label {
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 0 0 var(--space-1);
+    }
+
+    .metric-value {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .metric-value.positive {
+        color: var(--success-color);
+    }
+
+    .metric-value.negative {
+        color: var(--danger-color);
+    }
+
+    .stock-actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .action-btn:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+    }
+
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+        border-radius: var(--radius-lg);
+        height: 20px;
+        margin-bottom: var(--space-2);
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    .no-results {
+        text-align: center;
+        padding: var(--space-12);
+        color: var(--text-secondary);
+    }
+
+    .no-results-icon {
+        font-size: var(--text-4xl);
+        margin-bottom: var(--space-4);
+        color: var(--text-tertiary);
+    }
+
+    .no-results-title {
+        font-size: var(--text-xl);
+        font-weight: 700;
+        margin: 0 0 var(--space-2);
+        color: var(--text-primary);
+    }
+
+    .no-results-text {
+        font-size: var(--text-base);
+        margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: var(--space-8) var(--space-6);
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stocks-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stock-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        .stock-actions {
+            flex-direction: column;
+        }
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.15s; }
+    .fade-in:nth-child(3) { animation-delay: 0.2s; }
+    .fade-in:nth-child(4) { animation-delay: 0.25s; }
+    .fade-in:nth-child(5) { animation-delay: 0.3s; }
+    .fade-in:nth-child(6) { animation-delay: 0.35s; }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Stock Market Analysis</h1>
+        <p class="page-subtitle">
+            Discover investment opportunities with comprehensive stock analysis, 
+            real-time data, and AI-powered insights.
+        </p>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Search Symbol</label>
+                <input type="text" class="filter-input" placeholder="e.g., AAPL, TSLA" id="symbolFilter">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Sector</label>
+                <select class="filter-input" id="sectorFilter">
+                    <option value="">All Sectors</option>
+                    <option value="technology">Technology</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="finance">Finance</option>
+                    <option value="energy">Energy</option>
+                    <option value="consumer">Consumer</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Market Cap</label>
+                <select class="filter-input" id="capFilter">
+                    <option value="">All Caps</option>
+                    <option value="large">Large Cap (>$10B)</option>
+                    <option value="mid">Mid Cap ($2B-$10B)</option>
+                    <option value="small">Small Cap (<$2B)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <i class="fas fa-filter"></i>
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stocks Grid -->
+    <div class="stocks-grid" id="stocksGrid">
+        <!-- Stock Item Template -->
+        <a href="/stock_detail/AAPL/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">AAPL</h3>
+                    <p class="stock-name">Apple Inc.</p>
+                </div>
+                <div class="stock-logo">A</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$175.43</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value positive">+2.34%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">54.2M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$2.75T</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+
+        <a href="/stock_detail/TSLA/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">TSLA</h3>
+                    <p class="stock-name">Tesla, Inc.</p>
+                </div>
+                <div class="stock-logo">T</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$248.87</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value negative">-1.23%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">89.1M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$791.5B</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+
+        <a href="/stock_detail/MSFT/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">MSFT</h3>
+                    <p class="stock-name">Microsoft Corporation</p>
+                </div>
+                <div class="stock-logo">M</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$378.91</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value positive">+0.87%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">31.4M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$2.81T</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+
+        <a href="/stock_detail/GOOGL/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">GOOGL</h3>
+                    <p class="stock-name">Alphabet Inc.</p>
+                </div>
+                <div class="stock-logo">G</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$142.56</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value positive">+1.45%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">25.7M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$1.78T</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+
+        <a href="/stock_detail/NVDA/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">NVDA</h3>
+                    <p class="stock-name">NVIDIA Corporation</p>
+                </div>
+                <div class="stock-logo">N</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$461.23</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value positive">+3.21%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">42.8M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$1.13T</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+
+        <a href="/stock_detail/META/" class="stock-item fade-in">
+            <div class="stock-header">
+                <div class="stock-info">
+                    <h3 class="stock-symbol">META</h3>
+                    <p class="stock-name">Meta Platforms, Inc.</p>
+                </div>
+                <div class="stock-logo">M</div>
+            </div>
+            <div class="stock-metrics">
+                <div class="metric">
+                    <p class="metric-label">Current Price</p>
+                    <p class="metric-value">$336.42</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Change</p>
+                    <p class="metric-value positive">+1.89%</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Volume</p>
+                    <p class="metric-value">18.9M</p>
+                </div>
+                <div class="metric">
+                    <p class="metric-label">Market Cap</p>
+                    <p class="metric-value">$855.3B</p>
+                </div>
+            </div>
+            <div class="stock-actions">
+                <span class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Analyze
+                </span>
+                <span class="action-btn">
+                    <i class="fas fa-star"></i>
+                    Watchlist
+                </span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const symbol = document.getElementById('symbolFilter').value.toLowerCase();
+    const sector = document.getElementById('sectorFilter').value;
+    const cap = document.getElementById('capFilter').value;
+    
+    const stockItems = document.querySelectorAll('.stock-item');
+    let visibleCount = 0;
+    
+    stockItems.forEach(item => {
+        const stockSymbol = item.querySelector('.stock-symbol').textContent.toLowerCase();
+        let visible = true;
+        
+        if (symbol && !stockSymbol.includes(symbol)) {
+            visible = false;
+        }
+        
+        if (visible) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show no results message if needed
+    if (visibleCount === 0) {
+        showNoResults();
+    } else {
+        hideNoResults();
+    }
+}
+
+function showNoResults() {
+    let noResults = document.querySelector('.no-results');
+    if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.className = 'no-results';
+        noResults.innerHTML = `
+            <div class="no-results-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="no-results-title">No stocks found</h3>
+            <p class="no-results-text">Try adjusting your search criteria</p>
+        `;
+        document.getElementById('stocksGrid').appendChild(noResults);
+    }
+    noResults.style.display = 'block';
+}
+
+function hideNoResults() {
+    const noResults = document.querySelector('.no-results');
+    if (noResults) {
+        noResults.style.display = 'none';
+    }
+}
+
+// Real-time search
+document.getElementById('symbolFilter').addEventListener('input', applyFilters);
+document.getElementById('sectorFilter').addEventListener('change', applyFilters);
+document.getElementById('capFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %}

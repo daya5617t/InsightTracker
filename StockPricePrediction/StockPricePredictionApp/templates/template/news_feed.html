@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+
+{% block title %}Financial News Feed - InsightTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .news-header {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--danger-color);
+        border-radius: 20px;
+        color: var(--danger-color);
+        font-weight: 700;
+        font-size: 0.85rem;
+        animation: pulseGlow 2s infinite;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+        }
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--danger-color);
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
+    .news-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: slideInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .news-card:nth-child(1) { animation-delay: 0.1s; }
+    .news-card:nth-child(2) { animation-delay: 0.2s; }
+    .news-card:nth-child(3) { animation-delay: 0.3s; }
+    .news-card:nth-child(4) { animation-delay: 0.4s; }
+    .news-card:nth-child(5) { animation-delay: 0.5s; }
+    .news-card:nth-child(n+6) { animation-delay: 0.6s; }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .news-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--primary-color), #6366f1);
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.3s ease;
+    }
+
+    .news-card:hover::before {
+        transform: scaleY(1);
+    }
+
+    .news-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        border-color: var(--primary-color);
+    }
+
+    .news-header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 1rem;
+    }
+
+    .news-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        flex: 1;
+    }
+
+    .news-title a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .news-title a:hover {
+        color: var(--primary-color);
+    }
+
+    .news-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .news-ticker {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    .news-publisher {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .news-publisher i {
+        color: var(--primary-color);
+    }
+
+    .news-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .news-date i {
+        color: var(--text-secondary);
+    }
+
+    .news-summary {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .news-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .news-link:hover {
+        gap: 0.75rem;
+        color: var(--accent-color);
+    }
+
+    .news-link i {
+        transition: transform 0.3s;
+    }
+
+    .news-link:hover i {
+        transform: translateX(3px);
+    }
+
+    .refresh-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .refresh-btn:hover {
+        transform: translateY(-5px) rotate(180deg);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+
+    .refresh-btn:active {
+        transform: translateY(-3px) rotate(180deg) scale(0.95);
+    }
+
+    .refresh-btn.loading {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .stat-badge {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .stat-badge strong {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .news-source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid #6366f1;
+        border-radius: 6px;
+        color: #6366f1;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .news-header-section {
+            flex-direction: column;
+        }
+
+        .refresh-btn {
+            bottom: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- News Header -->
+<div class="news-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="heading-section mb-2">
+                <i class="fas fa-newspaper"></i> Financial News Feed
+            </h1>
+            <p class="text-muted mb-0">Stay updated with the latest financial market news</p>
+        </div>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>LIVE</span>
+        </div>
+    </div>
+
+    <div class="stats-bar mt-3">
+        <div class="stat-badge">
+            <strong>{{ total_news }}</strong> Articles
+        </div>
+        <div class="stat-badge">
+            <i class="fas fa-clock"></i> Updated: {{ last_updated|date:"H:i" }}
+        </div>
+        <div class="stat-badge">
+            <i class="fas fa-sync-alt"></i> Auto-refresh: 60s
+        </div>
+    </div>
+</div>
+
+<!-- News Articles -->
+<div class="row">
+    <div class="col-12">
+        {% if news_items %}
+            {% for news in news_items %}
+            <div class="news-card">
+                <div class="news-header-section">
+                    <h3 class="news-title">
+                        <a href="{{ news.link }}" target="_blank" rel="noopener noreferrer">
+                            {{ news.title }}
+                        </a>
+                    </h3>
+                    <div class="news-source-badge">
+                        <i class="fas fa-tag"></i>
+                        {{ news.source }}
+                    </div>
+                </div>
+
+                <div class="news-meta">
+                    {% if news.related_ticker %}
+                    <div class="news-ticker">
+                        <i class="fas fa-chart-line"></i>
+                        {{ news.related_ticker }}
+                    </div>
+                    {% endif %}
+                    <div class="news-publisher">
+                        <i class="fas fa-building"></i>
+                        <span>{{ news.publisher }}</span>
+                    </div>
+                    {% if news.published_date %}
+                    <div class="news-date">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>{{ news.published_date|date:"M d, Y H:i" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if news.summary %}
+                <div class="news-summary">
+                    {{ news.summary|safe }}
+                </div>
+                {% endif %}
+
+                <a href="{{ news.link }}" target="_blank" rel="noopener noreferrer" class="news-link">
+                    Read Full Article
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <h3>No news available at the moment</h3>
+                <p>Please try refreshing the page</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Refresh Button -->
+<button class="refresh-btn" onclick="refreshNews()" id="refreshBtn" title="Refresh News">
+    <i class="fas fa-sync-alt"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let refreshInterval;
+    let isRefreshing = false;
+
+    function refreshNews() {
+        if (isRefreshing) return;
+        
+        isRefreshing = true;
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        // Reload the page after a short delay
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    }
+
+    // Auto-refresh every 60 seconds
+    function startAutoRefresh() {
+        refreshInterval = setInterval(() => {
+            if (!isRefreshing) {
+                refreshNews();
+            }
+        }, 60000); // 60 seconds
+    }
+
+    // Start auto-refresh when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        startAutoRefresh();
+
+        // Add scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.news-card').forEach(card => {
+            observer.observe(card);
+        });
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    });
+
+    // Add hover effects to news cards
+    document.querySelectorAll('.news-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px) scale(1.01)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0) scale(1)';
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - InsightTracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-3xl);
+        padding: var(--space-12) var(--space-8);
+        margin-bottom: var(--space-12);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+    }
+
+    .hero-title {
+        font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
+        font-weight: 800;
+        margin: 0 0 var(--space-4);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.1;
+    }
+
+    .hero-subtitle {
+        font-size: var(--text-xl);
+        color: var(--text-secondary);
+        margin: 0 0 var(--space-8);
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.5;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: var(--space-4);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--space-6);
+        margin-bottom: var(--space-12);
+    }
+
+    .stat-card {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-6);
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-color);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        opacity: 1;
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-4);
+    }
+
+    .stat-title {
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 0;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-xl);
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: var(--text-xl);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-value {
+        font-size: var(--text-3xl);
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0 0 var(--space-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stat-change {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--text-sm);
+        font-weight: 600;
+    }
+
+    .stat-change.positive {
+        color: var(--success-color);
+    }
+
+    .stat-change.negative {
+        color: var(--danger-color);
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-6);
+        margin-bottom: var(--space-12);
+    }
+
+    .action-card {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-8);
+        text-align: center;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .action-card:hover::before {
+        left: 100%;
+    }
+
+    .action-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-2xl);
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: var(--text-2xl);
+        margin: 0 auto var(--space-4);
+        box-shadow: var(--shadow-md);
+    }
+
+    .action-title {
+        font-size: var(--text-xl);
+        font-weight: 700;
+        margin: 0 0 var(--space-2);
+        color: var(--text-primary);
+    }
+
+    .action-description {
+        color: var(--text-secondary);
+        font-size: var(--text-base);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .watchlist-section {
+        background: var(--gradient-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-2xl);
+        padding: var(--space-8);
+        margin-bottom: var(--space-12);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-8);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-title {
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .watchlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--space-4);
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in:nth-child(3) { animation-delay: 0.3s; }
+    .fade-in:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: var(--space-8) var(--space-6);
+            text-align: center;
+        }
+
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section fade-in reveal-on-scroll">
+        <h1 class="hero-title typography-modern heading-gradient">Welcome to Your Investment Dashboard</h1>
+        <p class="hero-subtitle">
+            Get real-time market insights, AI-powered predictions, and comprehensive 
+            analysis tools to make smarter investment decisions.
+        </p>
+        <div class="hero-actions">
+            <a href="/analytics-map/" class="btn btn-primary btn-lg btn-pop elastic-hover">
+                <i class="fas fa-chart-line"></i>
+                View Analytics
+            </a>
+            <a href="/predict/" class="btn btn-secondary btn-lg btn-pop elastic-hover">
+                <i class="fas fa-crystal-ball"></i>
+                AI Predictions
+            </a>
+            <a href="/all_stocks/" class="btn btn-outline btn-lg btn-pop elastic-hover">
+                <i class="fas fa-search"></i>
+                Browse Stocks
+            </a>
+        </div>
+    </section>
+
+    <!-- Performance Stats -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card fade-in glass-card reveal-on-scroll reveal-delay-1">
+                <div class="stat-header">
+                    <h3 class="stat-title">Portfolio Value</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-value">$127,430</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+12.4% this month</span>
+                </div>
+            </div>
+
+            <div class="stat-card fade-in glass-card reveal-on-scroll reveal-delay-2">
+                <div class="stat-header">
+                    <h3 class="stat-title">Active Positions</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                </div>
+                <div class="stat-value">24</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-plus"></i>
+                    <span>3 new this week</span>
+                </div>
+            </div>
+
+            <div class="stat-card fade-in glass-card reveal-on-scroll reveal-delay-3">
+                <div class="stat-header">
+                    <h3 class="stat-title">Today's P&L</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-trending-up"></i>
+                    </div>
+                </div>
+                <div class="stat-value">+$2,847</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+2.23% today</span>
+                </div>
+            </div>
+
+            <div class="stat-card fade-in glass-card reveal-on-scroll reveal-delay-4">
+                <div class="stat-header">
+                    <h3 class="stat-title">Accuracy Rate</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-target"></i>
+                    </div>
+                </div>
+                <div class="stat-value">87.3%</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>AI prediction accuracy</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <a href="/compare/" class="action-card fade-in">
+            <div class="action-icon">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+            <h3 class="action-title">Compare Stocks</h3>
+            <p class="action-description">
+                Side-by-side analysis of multiple stocks with advanced metrics and visualizations.
+            </p>
+        </a>
+
+        <a href="/news/" class="action-card fade-in">
+            <div class="action-icon">
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <h3 class="action-title">Market News</h3>
+            <p class="action-description">
+                Stay updated with real-time market news and sentiment analysis from trusted sources.
+            </p>
+        </a>
+
+        <a href="/predict/" class="action-card fade-in">
+            <div class="action-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h3 class="action-title">AI Predictions</h3>
+            <p class="action-description">
+                Advanced machine learning models providing accurate stock price predictions and trends.
+            </p>
+        </a>
+    </section>
+
+    <!-- Top Watchlist -->
+    <section class="watchlist-section fade-in">
+        <div class="section-header">
+            <h2 class="section-title">Your Watchlist</h2>
+            <a href="/all_stocks/" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Stock
+            </a>
+        </div>
+        
+        <div class="watchlist-grid">
+            <div class="stock-card">
+                <div class="stock-symbol">AAPL</div>
+                <div class="stock-name">Apple Inc.</div>
+                <div class="stock-price">$175.43</div>
+                <div class="stock-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    +2.34%
+                </div>
+            </div>
+
+            <div class="stock-card">
+                <div class="stock-symbol">TSLA</div>
+                <div class="stock-name">Tesla, Inc.</div>
+                <div class="stock-price">$248.87</div>
+                <div class="stock-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    -1.23%
+                </div>
+            </div>
+
+            <div class="stock-card">
+                <div class="stock-symbol">MSFT</div>
+                <div class="stock-name">Microsoft Corp.</div>
+                <div class="stock-price">$378.91</div>
+                <div class="stock-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    +0.87%
+                </div>
+            </div>
+
+            <div class="stock-card">
+                <div class="stock-symbol">GOOGL</div>
+                <div class="stock-name">Alphabet Inc.</div>
+                <div class="stock-price">$142.56</div>
+                <div class="stock-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    +1.45%
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

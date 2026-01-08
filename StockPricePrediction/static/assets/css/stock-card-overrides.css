@@ -1,0 +1,101 @@
+/* Stock Card Dark Mode Overrides */
+/* Comprehensive stock card text visibility fixes for dark theme */
+
+/* Stock Cards */
+.stock-card,
+.stock-card * {
+    color: #ffffff !important;
+}
+
+.stock-card .stock-symbol,
+.stock-symbol,
+.stock-card h1,
+.stock-card h2,
+.stock-card h3,
+.stock-card h4 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    font-weight: 700;
+}
+
+.stock-card .stock-name,
+.stock-name {
+    color: #e5e7eb !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.stock-card .stock-price,
+.stock-price {
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    font-weight: 700;
+}
+
+.stock-card .stock-change {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Company names and descriptions */
+.stock-card .company-name,
+.company-name {
+    color: #e5e7eb !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Any anchor tags in stock cards */
+.stock-card a,
+.stock-card a:hover,
+.stock-card a:focus {
+    color: #ffffff !important;
+    text-decoration: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Stock change indicators */
+.stock-change.positive {
+    color: #10b981 !important;
+}
+
+.stock-change.negative {
+    color: #ef4444 !important;
+}
+
+/* High/Low/Volume text */
+.stock-card .stock-high,
+.stock-card .stock-low,
+.stock-card .stock-volume,
+.stock-high,
+.stock-low,
+.stock-volume {
+    color: #d1d5db !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Labels in stock cards */
+.stock-card .label,
+.stock-card span,
+.stock-card small {
+    color: #e5e7eb !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Stock card hover effects */
+.stock-card:hover .stock-symbol,
+.stock-card:hover .stock-price {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure proper contrast for any text elements */
+.stock-card .text-primary {
+    color: #ffffff !important;
+}
+
+.stock-card .text-secondary {
+    color: #e5e7eb !important;
+}
+
+.stock-card .text-muted {
+    color: #9ca3af !important;
+}

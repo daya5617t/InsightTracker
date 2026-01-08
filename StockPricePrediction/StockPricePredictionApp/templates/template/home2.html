@@ -1,0 +1,802 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}InsightTracker - Smart Stock Analysis & Predictions{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced Home Page Styles */
+    .hero-section {
+        background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 50%, #0f1729 100%);
+        padding: 6rem 0 8rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        right: -50%;
+        bottom: -50%;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        animation: gradientShift 15s ease infinite;
+        pointer-events: none;
+    }
+
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><circle cx="100" cy="100" r="2" fill="%238b5cf6" opacity="0.3"/><circle cx="300" cy="200" r="1.5" fill="%2306b6d4" opacity="0.3"/><circle cx="500" cy="150" r="1" fill="%238b5cf6" opacity="0.2"/><circle cx="700" cy="300" r="2" fill="%2306b6d4" opacity="0.2"/><circle cx="900" cy="250" r="1.5" fill="%238b5cf6" opacity="0.3"/><circle cx="200" cy="500" r="1" fill="%2306b6d4" opacity="0.2"/><circle cx="600" cy="600" r="2" fill="%238b5cf6" opacity="0.3"/><circle cx="800" cy="700" r="1.5" fill="%2306b6d4" opacity="0.2"/></svg>');
+        background-size: cover;
+        animation: float 20s ease-in-out infinite;
+        opacity: 0.6;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(10%, 10%); }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 var(--space-lg);
+    }
+
+    .hero-content > * {
+        animation: fadeInUp 0.8s ease-out backwards;
+    }
+
+    .hero-content > :nth-child(1) { animation-delay: 0.1s; }
+    .hero-content > :nth-child(2) { animation-delay: 0.3s; }
+    .hero-content > :nth-child(3) { animation-delay: 0.5s; }
+    .hero-content > :nth-child(4) { animation-delay: 0.7s; }
+
+    .hero-title {
+        font-feature-settings: 'cv11', 'ss01', 'liga';
+        letter-spacing: -0.03em;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4.5rem);
+        font-weight: 900;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+        background: linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #06b6d4 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3s linear infinite;
+        text-shadow: 0 0 60px rgba(139, 92, 246, 0.4);
+        letter-spacing: -0.02em;
+    }
+
+    @keyframes shimmer {
+        to { background-position: 200% center; }
+    }
+
+    @keyframes floatSlow {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-15px) rotate(2deg); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .hero-subtitle {
+        font-size: clamp(1.1rem, 2vw, 1.35rem);
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 3rem;
+        line-height: 1.7;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        font-weight: 400;
+    }
+
+    .hero-cta {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 4rem;
+    }
+
+    .hero-cta .btn {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-cta .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .hero-cta .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .hero-cta .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Hero Statistics */
+    .hero-stats {
+        display: flex;
+        gap: 3rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 4rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        position: relative;
+        animation: scaleIn 0.6s ease-out backwards;
+    }
+
+    .stat-item:nth-child(1) { animation-delay: 0.8s; }
+    .stat-item:nth-child(2) { animation-delay: 1s; }
+    .stat-item:nth-child(3) { animation-delay: 1.2s; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: block;
+        margin-bottom: 0.5rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: var(--space-3xl) 0;
+        background: var(--bg-secondary);
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-xl);
+        margin-top: var(--space-2xl);
+    }
+
+    .feature-card {
+        background: rgba(26, 31, 53, 0.5);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 1.5rem;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out backwards;
+    }
+
+    .feature-card:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card:nth-child(4) { animation-delay: 0.4s; }
+    .feature-card:nth-child(5) { animation-delay: 0.5s; }
+    .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-12px) scale(1.03);
+        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+        border-color: rgba(139, 92, 246, 0.5);
+        background: rgba(26, 31, 53, 0.8);
+    }
+
+    .feature-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+        transition: transform 0.4s ease;
+        filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.4));
+        animation: floatSlow 4s ease-in-out infinite;
+    }
+
+    .feature-card:nth-child(1) .feature-icon { animation-delay: 0s; }
+    .feature-card:nth-child(2) .feature-icon { animation-delay: 0.5s; }
+    .feature-card:nth-child(3) .feature-icon { animation-delay: 1s; }
+    .feature-card:nth-child(4) .feature-icon { animation-delay: 1.5s; }
+    .feature-card:nth-child(5) .feature-icon { animation-delay: 2s; }
+    .feature-card:nth-child(6) .feature-icon { animation-delay: 2.5s; }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.15) rotate(5deg);
+        animation: none;
+    }
+
+    .feature-card h3 {
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--space-md);
+        color: var(--text-primary);
+    }
+
+    .feature-card p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* Analysis Form Section */
+    .analysis-section {
+        padding: var(--space-3xl) 0;
+        background: var(--bg-primary);
+    }
+
+    .analysis-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: rgba(15, 22, 32, 0.6);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 2rem;
+        padding: 3rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4),
+                    0 0 0 1px rgba(139, 92, 246, 0.1) inset;
+        position: relative;
+        overflow: hidden;
+        animation: scaleIn 0.8s ease-out backwards;
+    }
+
+    .analysis-card::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, #8b5cf6, #06b6d4, #8b5cf6);
+        border-radius: 2rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .analysis-card:hover::before {
+        opacity: 0.3;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-lg);
+        margin-bottom: var(--space-lg);
+    }
+
+    /* Section Titles */
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #ffffff, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+    }
+
+    .section-title p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.15rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Form Enhancements */
+    .form-control {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        border-radius: 0.75rem !important;
+        padding: 0.875rem 1.25rem !important;
+        color: #ffffff !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .form-control:focus {
+        border-color: #8b5cf6 !important;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .form-label {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 0.95rem !important;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 4rem 0 6rem;
+            min-height: 70vh;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .hero-stats {
+            gap: 2rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .analysis-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .hero-cta .btn {
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content reveal-on-scroll">
+            <h1 class="hero-title typography-modern heading-gradient">Invest Smarter. Build Wealth Faster.</h1>
+            <p class="hero-subtitle">
+                Advanced AI-powered stock analysis, predictions, and market insights 
+                to help you make informed investment decisions.
+            </p>
+            <div class="hero-cta reveal-on-scroll reveal-delay-2">
+                <a href="#analysis" class="btn btn-primary btn-pop elastic-hover">
+                    <i class="fas fa-chart-line"></i> Start Analyzing
+                </a>
+                <a href="/all_stocks/" class="btn btn-secondary btn-pop elastic-hover">
+                    <i class="fas fa-search"></i> Browse Stocks
+                </a>
+            </div>
+
+            <!-- Hero Statistics -->
+            <div class="hero-stats reveal-on-scroll reveal-delay-3">
+                <div class="stat-item">
+                    <span class="stat-number">10K+</span>
+                    <span class="stat-label">Stocks Analyzed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">95%</span>
+                    <span class="stat-label">Accuracy Rate</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Live Updates</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Why Choose InsightTracker?</h2>
+            <p>Powerful tools and insights to help you make better investment decisions</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-1">
+                <div class="feature-icon">📊</div>
+                <h3>Advanced Analytics</h3>
+                <p>Get comprehensive stock analysis with technical indicators, trend analysis, and market sentiment data.</p>
+            </div>
+            
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-2">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Predictions</h3>
+                <p>Leverage machine learning algorithms to predict future stock prices with high accuracy.</p>
+            </div>
+            
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-3">
+                <div class="feature-icon">📈</div>
+                <h3>Real-time Data</h3>
+                <p>Access live market data, news, and updates to stay ahead of market movements.</p>
+            </div>
+            
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-4">
+                <div class="feature-icon">🔍</div>
+                <h3>Compare Stocks</h3>
+                <p>Side-by-side comparison of multiple stocks to identify the best investment opportunities.</p>
+            </div>
+            
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-5">
+                <div class="feature-icon">📱</div>
+                <h3>Mobile Friendly</h3>
+                <p>Access your portfolio and analysis tools anywhere with our responsive design.</p>
+            </div>
+            
+            <div class="feature-card glass-card reveal-on-scroll reveal-delay-5">
+                <div class="feature-icon">🛡️</div>
+                <h3>Secure & Reliable</h3>
+                <p>Your data is protected with enterprise-grade security and 99.9% uptime guarantee.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analysis Section -->
+<section class="analysis-section" id="analysis">
+    <div class="container">
+        <div class="analysis-card glass reveal-on-scroll-scale">
+            <div class="section-title" style="margin-bottom: var(--space-xl);">
+                <h2>Analyze Any Stock</h2>
+                <p>Enter a stock symbol and date range to get detailed analysis and predictions</p>
+            </div>
+            
+            <form method="post" action="/">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="company1" class="form-label">Stock Symbol</label>
+                        <input type="text" class="form-control" id="company1" name="company1"
+                               placeholder="e.g., AAPL, MSFT, GOOGL" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="close_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="close_date" name="close_date" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-pop elastic-hover" style="width: 100%;">
+                    <i class="fas fa-chart-line"></i> Analyze Stock
+                </button>
+            </form>
+            
+            {% if flag %}
+            <div class="card" style="margin-top: var(--space-xl);">
+                <h3 style="text-align: center; margin-bottom: var(--space-lg);">Analysis Results</h3>
+                <div style="text-align: center; margin-bottom: var(--space-lg);">
+                    <span class="badge badge-success">{{ company }}</span>
+                </div>
+                
+                <div class="grid grid-3" style="margin-bottom: var(--space-lg);">
+                    <div class="card">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">
+                            ${{ last_day_price }}
+                        </div>
+                        <div style="color: var(--text-secondary);">Current Price</div>
+                    </div>
+                    <div class="card">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">
+                            ${{ max_price }}
+                        </div>
+                        <div style="color: var(--text-secondary);">Highest Price</div>
+                    </div>
+                    <div class="card">
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">
+                            ${{ min_price }}
+                        </div>
+                        <div style="color: var(--text-secondary);">Lowest Price</div>
+                    </div>
+                </div>
+                
+                <!-- Stock Price Chart -->
+                <div style="margin-top: var(--space-xl);">
+                    <h3 style="text-align: center; margin-bottom: var(--space-lg); color: var(--text-primary);">Price Chart</h3>
+                    <div style="position: relative; height: 400px; width: 100%;">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if flag %}
+{{ x|json_script:"chart-dates" }}
+{{ y_close|json_script:"chart-close" }}
+{{ y_open|json_script:"chart-open" }}
+{{ y_high|json_script:"chart-high" }}
+{{ y_low|json_script:"chart-low" }}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Animated Counter for Statistics
+    function animateCounter(element, target, duration = 2000) {
+        const start = 0;
+        const increment = target / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                element.textContent = target;
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(current);
+            }
+        }, 16);
+    }
+
+    // Animate counters when they come into view
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.dataset.animated) {
+                entry.target.dataset.animated = 'true';
+                const statNumber = entry.target.querySelector('.stat-number');
+                const text = statNumber.textContent;
+                const numbers = text.match(/\d+/);
+                
+                if (numbers) {
+                    const target = parseInt(numbers[0]);
+                    const suffix = text.replace(numbers[0], '');
+                    statNumber.textContent = '0' + suffix;
+                    
+                    setTimeout(() => {
+                        let current = 0;
+                        const increment = target / 50;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                statNumber.textContent = target + suffix;
+                                clearInterval(timer);
+                            } else {
+                                statNumber.textContent = Math.floor(current) + suffix;
+                            }
+                        }, 30);
+                    }, 300);
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe stat items
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.stat-item').forEach(item => {
+            counterObserver.observe(item);
+        });
+
+        // Add hover effect to cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-12px) scale(1.03)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Stock Price Chart
+    {% if flag %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('stockChart');
+        if (ctx) {
+            const dates = JSON.parse(document.getElementById('chart-dates').textContent);
+            const closePrices = JSON.parse(document.getElementById('chart-close').textContent);
+            const openPrices = JSON.parse(document.getElementById('chart-open').textContent);
+            const highPrices = JSON.parse(document.getElementById('chart-high').textContent);
+            const lowPrices = JSON.parse(document.getElementById('chart-low').textContent);
+            
+            // Get theme colors
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+                          document.body.classList.contains('dark-theme');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#8b5cf6';
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Close Price',
+                        data: closePrices,
+                        borderColor: primaryColor,
+                        backgroundColor: primaryColor + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }, {
+                        label: 'Open Price',
+                        data: openPrices,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: textColor,
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: isDark ? 'rgba(15, 22, 32, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: primaryColor,
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: textColor,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: textColor,
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

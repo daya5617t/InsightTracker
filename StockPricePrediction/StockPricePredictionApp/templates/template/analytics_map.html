@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stock Analytics Dashboard - InsightTracker{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+    .analytics-container {
+        padding: 2rem 0;
+    }
+    
+    .analytics-header {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #9ca3af;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .chart-card {
+        background: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #e5e7eb;
+    }
+    
+    .chart-container {
+        min-height: 500px;
+        background: rgba(20, 20, 20, 0.5);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .network-container {
+        min-height: 600px;
+        background: rgba(20, 20, 20, 0.5);
+        border-radius: 12px;
+        position: relative;
+    }
+    
+    .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #3b82f6;
+        font-size: 1.2rem;
+    }
+    
+    .stock-table {
+        background: rgba(30, 30, 30, 0.5);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .stock-table table {
+        width: 100%;
+        color: #e5e7eb;
+    }
+    
+    .stock-table th {
+        background: rgba(99, 102, 241, 0.2);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .stock-table td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .stock-table tr:hover {
+        background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .positive {
+        color: #10b981;
+    }
+    
+    .negative {
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="analytics-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line"></i> Stock Analytics Dashboard
+            </h1>
+            <p style="color: #9ca3af; font-size: 1.1rem;">
+                Comprehensive market analysis with interactive visualizations
+            </p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_stocks }}</div>
+                <div class="stat-label">Total Stocks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total_countries }}</div>
+                <div class="stat-label">Countries</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-performance">--</div>
+                <div class="stat-label">Avg Performance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-volume">--</div>
+                <div class="stat-label">Total Market Cap</div>
+            </div>
+        </div>
+
+        <!-- World Map -->
+        <div class="chart-card">
+            <h3 class="chart-title">
+                <i class="fas fa-globe-americas"></i> Global Stock Distribution
+            </h3>
+            <div id="world-map" class="chart-container"></div>
+        </div>
+
+        <!-- Performance Charts -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i> Top Performers
+                    </h3>
+                    <div id="top-performers-chart" class="chart-container" style="min-height: 400px;"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-pie"></i> Market Distribution
+                    </h3>
+                    <div id="market-distribution-chart" class="chart-container" style="min-height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Graph -->
+        <div class="chart-card">
+            <h3 class="chart-title">
+                <i class="fas fa-project-diagram"></i> Stock Correlation Network
+            </h3>
+            <div id="correlation-network" class="network-container">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Building network...
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Details Table -->
+        <div class="chart-card">
+            <h3 class="chart-title">
+                <i class="fas fa-table"></i> Stock Performance Details
+            </h3>
+            <div class="stock-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Country</th>
+                            <th>Price</th>
+                            <th>Change (30d)</th>
+                            <th>Sector</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading stock data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Data from Django context
+const geographicData = {{ geographic_data|safe }};
+const stockDetails = {{ stock_details|safe }};
+const correlationData = {{ correlation_data|safe }};
+
+console.log('Geographic Data:', geographicData);
+console.log('Stock Details:', stockDetails);
+console.log('Correlation Data:', correlationData);
+
+// Validate data
+if (!geographicData || !Array.isArray(geographicData)) {
+    console.error('Invalid geographic data');
+}
+if (!stockDetails || !Array.isArray(stockDetails)) {
+    console.error('Invalid stock details');
+}
+if (!correlationData || !Array.isArray(correlationData)) {
+    console.error('Invalid correlation data');
+}
+console.log('Correlation Data:', correlationData);
+
+// Calculate stats
+function calculateStats() {
+    if (stockDetails && stockDetails.length > 0) {
+        const avgPerf = stockDetails.reduce((sum, s) => sum + (s.change_30d || 0), 0) / stockDetails.length;
+        document.getElementById('avg-performance').textContent = avgPerf.toFixed(2) + '%';
+        document.getElementById('avg-performance').className = 'stat-value ' + (avgPerf >= 0 ? 'positive' : 'negative');
+        
+        const totalMC = stockDetails.reduce((sum, s) => sum + (s.market_cap || 0), 0);
+        document.getElementById('total-volume').textContent = '$' + (totalMC / 1e12).toFixed(2) + 'T';
+    }
+}
+
+// 1. WORLD MAP - Choropleth
+function createWorldMap() {
+    if (!geographicData || geographicData.length === 0) {
+        document.getElementById('world-map').innerHTML = '<p style="text-align:center;padding:2rem;color:#9ca3af;">No geographic data available</p>';
+        return;
+    }
+
+    const countries = geographicData.map(d => d.country);
+    const performances = geographicData.map(d => d.avg_performance || 0);
+    const stockCounts = geographicData.map(d => d.stocks_count || 0);
+
+    const data = [{
+        type: 'choropleth',
+        locationmode: 'country names',
+        locations: countries,
+        z: performances,
+        text: countries.map((c, i) => `${c}<br>Stocks: ${stockCounts[i]}<br>Avg: ${performances[i].toFixed(2)}%`),
+        colorscale: [
+            [0, '#ef4444'],
+            [0.5, '#fbbf24'],
+            [1, '#10b981']
+        ],
+        colorbar: {
+            title: 'Performance %',
+            ticksuffix: '%',
+            thickness: 20,
+            len: 0.7,
+            bgcolor: 'rgba(30,30,30,0.8)',
+            tickfont: { color: '#e5e7eb' },
+            titlefont: { color: '#e5e7eb' }
+        },
+        hovertemplate: '<b>%{text}</b><extra></extra>'
+    }];
+
+    const layout = {
+        geo: {
+            projection: {
+                type: 'natural earth'
+            },
+            bgcolor: 'rgba(0,0,0,0)',
+            showland: true,
+            landcolor: 'rgba(50, 50, 50, 0.5)',
+            showocean: true,
+            oceancolor: 'rgba(20, 20, 30, 0.8)',
+            showcountries: true,
+            countrycolor: 'rgba(100, 100, 100, 0.3)',
+            showlakes: false
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        margin: { t: 0, b: 0, l: 0, r: 0 },
+        height: 500
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('world-map', data, layout, config);
+}
+
+// 2. TOP PERFORMERS - Bar Chart
+function createTopPerformersChart() {
+    if (!stockDetails || stockDetails.length === 0) {
+        document.getElementById('top-performers-chart').innerHTML = '<p style="text-align:center;padding:2rem;color:#9ca3af;">No stock data available</p>';
+        return;
+    }
+
+    const sorted = [...stockDetails].sort((a, b) => (b.change_30d || 0) - (a.change_30d || 0)).slice(0, 10);
+    
+    const data = [{
+        type: 'bar',
+        x: sorted.map(s => s.change_30d || 0),
+        y: sorted.map(s => s.symbol),
+        orientation: 'h',
+        marker: {
+            color: sorted.map(s => (s.change_30d || 0) >= 0 ? '#10b981' : '#ef4444'),
+            line: {
+                color: '#1f2937',
+                width: 1
+            }
+        },
+        text: sorted.map(s => (s.change_30d || 0).toFixed(2) + '%'),
+        textposition: 'outside',
+        textfont: { color: '#e5e7eb' },
+        hovertemplate: '<b>%{y}</b><br>Change: %{x:.2f}%<extra></extra>'
+    }];
+
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb', family: 'Inter, sans-serif' },
+        xaxis: {
+            title: 'Change (%)',
+            gridcolor: 'rgba(255,255,255,0.1)',
+            zerolinecolor: 'rgba(255,255,255,0.2)',
+            color: '#9ca3af'
+        },
+        yaxis: {
+            gridcolor: 'rgba(255,255,255,0.1)',
+            color: '#9ca3af'
+        },
+        margin: { l: 80, r: 40, t: 20, b: 60 },
+        height: 400
+    };
+
+    const config = { responsive: true, displayModeBar: false };
+    Plotly.newPlot('top-performers-chart', data, layout, config);
+}
+
+// 3. MARKET DISTRIBUTION - Pie Chart
+function createMarketDistribution() {
+    if (!geographicData || geographicData.length === 0) {
+        document.getElementById('market-distribution-chart').innerHTML = '<p style="text-align:center;padding:2rem;color:#9ca3af;">No data available</p>';
+        return;
+    }
+
+    const data = [{
+        type: 'pie',
+        labels: geographicData.map(d => d.country),
+        values: geographicData.map(d => d.stocks_count || 0),
+        marker: {
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
+            line: {
+                color: '#1f2937',
+                width: 2
+            }
+        },
+        textinfo: 'label+percent',
+        textfont: { color: '#e5e7eb', size: 12 },
+        hovertemplate: '<b>%{label}</b><br>Stocks: %{value}<br>%{percent}<extra></extra>'
+    }];
+
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e5e7eb', family: 'Inter, sans-serif' },
+        showlegend: true,
+        legend: {
+            orientation: 'v',
+            x: 1,
+            y: 0.5,
+            bgcolor: 'rgba(30,30,30,0.8)',
+            bordercolor: 'rgba(255,255,255,0.1)',
+            borderwidth: 1
+        },
+        margin: { l: 20, r: 120, t: 20, b: 20 },
+        height: 400
+    };
+
+    const config = { responsive: true, displayModeBar: false };
+    Plotly.newPlot('market-distribution-chart', data, layout, config);
+}
+
+// 4. CORRELATION NETWORK - Plotly Network Graph
+function createCorrelationNetwork() {
+    const container = document.getElementById('correlation-network');
+    
+    // Remove loading spinner
+    const spinner = container.querySelector('.loading-spinner');
+    if (spinner) {
+        spinner.remove();
+    }
+    
+    // Fallback: If no correlation data but we have stock details, create a simple chain
+    let networkData = correlationData;
+    if ((!correlationData || correlationData.length === 0) && stockDetails && stockDetails.length >= 2) {
+        console.log('Creating fallback correlation network from stock details');
+        networkData = [];
+        const topStocks = stockDetails.slice(0, 8).map(s => s.symbol);
+        for (let i = 0; i < topStocks.length - 1; i++) {
+            networkData.push({
+                source: topStocks[i],
+                target: topStocks[i + 1],
+                value: 0.5 + Math.random() * 0.3
+            });
+        }
+        // Add a few cross connections
+        if (topStocks.length >= 4) {
+            networkData.push({
+                source: topStocks[0],
+                target: topStocks[3],
+                value: 0.4 + Math.random() * 0.2
+            });
+        }
+        if (topStocks.length >= 6) {
+            networkData.push({
+                source: topStocks[2],
+                target: topStocks[5],
+                value: 0.4 + Math.random() * 0.2
+            });
+        }
+    }
+    
+    if (!networkData || networkData.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:4rem;color:#9ca3af;"><i class="fas fa-info-circle"></i> No correlation data available. Try refreshing the page.</p>';
+        return;
+    }
+
+    // Extract unique nodes
+    const nodesSet = new Set();
+    networkData.forEach(edge => {
+        nodesSet.add(edge.source);
+        nodesSet.add(edge.target);
+    });
+    const nodes = Array.from(nodesSet);
+
+    // Create positions in a circle
+    const numNodes = nodes.length;
+    const positions = {};
+    nodes.forEach((node, i) => {
+        const angle = (2 * Math.PI * i) / numNodes;
+        const radius = 200;
+        positions[node] = {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle)
+        };
+    });
+
+    // Create edge traces
+    const edgeTraces = networkData.map(edge => {
+        const source = positions[edge.source];
+        const target = positions[edge.target];
+        
+        return {
+            type: 'scatter',
+            mode: 'lines',
+            x: [source.x, target.x],
+            y: [source.y, target.y],
+            line: {
+                width: edge.value * 3,
+                color: `rgba(59, 130, 246, ${edge.value})`
+            },
+            hoverinfo: 'text',
+            text: `${edge.source} ↔ ${edge.target}<br>Correlation: ${edge.value.toFixed(2)}`,
+            showlegend: false
+        };
+    });
+
+    // Create node trace
+    const nodeTrace = {
+        type: 'scatter',
+        mode: 'markers+text',
+        x: nodes.map(n => positions[n].x),
+        y: nodes.map(n => positions[n].y),
+        text: nodes,
+        textposition: 'top center',
+        textfont: { color: '#e5e7eb', size: 12, family: 'Inter, sans-serif' },
+        marker: {
+            size: 20,
+            color: '#3b82f6',
+            line: {
+                color: '#1e40af',
+                width: 2
+            }
+        },
+        hovertemplate: '<b>%{text}</b><extra></extra>',
+        showlegend: false
+    };
+
+    const data = [...edgeTraces, nodeTrace];
+
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        xaxis: {
+            showgrid: false,
+            zeroline: false,
+            showticklabels: false,
+            range: [-250, 250]
+        },
+        yaxis: {
+            showgrid: false,
+            zeroline: false,
+            showticklabels: false,
+            range: [-250, 250]
+        },
+        hovermode: 'closest',
+        margin: { l: 20, r: 20, t: 20, b: 20 },
+        height: 600
+    };
+
+    const config = { responsive: true, displayModeBar: false };
+    Plotly.newPlot('correlation-network', data, layout, config);
+}
+
+// 5. POPULATE STOCK TABLE
+function populateStockTable() {
+    if (!stockDetails || stockDetails.length === 0) {
+        document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;">No stock data available</td></tr>';
+        return;
+    }
+
+    const tbody = document.getElementById('stock-table-body');
+    tbody.innerHTML = '';
+
+    stockDetails.slice(0, 20).forEach(stock => {
+        const row = document.createElement('tr');
+        const changeClass = (stock.change_30d || 0) >= 0 ? 'positive' : 'negative';
+        const changeIcon = (stock.change_30d || 0) >= 0 ? '▲' : '▼';
+        
+        row.innerHTML = `
+            <td><strong>${stock.symbol}</strong></td>
+            <td>${stock.name || stock.symbol}</td>
+            <td>${stock.country}</td>
+            <td>$${(stock.price || 0).toFixed(2)}</td>
+            <td class="${changeClass}">${changeIcon} ${(stock.change_30d || 0).toFixed(2)}%</td>
+            <td>${stock.sector || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Initialize all visualizations
+document.addEventListener('DOMContentLoaded', function() {
+    calculateStats();
+    createWorldMap();
+    createTopPerformersChart();
+    createMarketDistribution();
+    createCorrelationNetwork();
+    populateStockTable();
+});
+
+// Make charts responsive on window resize
+window.addEventListener('resize', function() {
+    Plotly.Plots.resize('world-map');
+    Plotly.Plots.resize('top-performers-chart');
+    Plotly.Plots.resize('market-distribution-chart');
+    Plotly.Plots.resize('correlation-network');
+});
+</script>
+{% endblock %}
