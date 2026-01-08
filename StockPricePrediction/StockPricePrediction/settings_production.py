@@ -83,10 +83,13 @@ if 'DATABASE_URL' in os.environ:
         )
     }
 else:
+    # For SQLite in production (Render free tier)
+    db_dir = BASE_DIR / 'db_data'
+    db_dir.mkdir(exist_ok=True)  # Create directory if it doesn't exist
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR.parent / 'data' / 'database' / 'db.sqlite3',
+            'NAME': db_dir / 'db.sqlite3',
         }
     }
 
@@ -107,9 +110,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+
+# Only include static dir if it exists and is not STATIC_ROOT
+static_dir = os.path.join(BASE_DIR, 'static')
+if os.path.exists(static_dir) and os.path.abspath(static_dir) != os.path.abspath(STATIC_ROOT):
+    STATICFILES_DIRS = [static_dir]
+else:
+    STATICFILES_DIRS = []
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

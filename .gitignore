@@ -58,6 +58,10 @@ coverage.xml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
+# Keep db_data directory structure but ignore database
+StockPricePrediction/db_data/*.sqlite3
+!StockPricePrediction/db_data/.gitkeep
 
 # Flask stuff:
 instance/
