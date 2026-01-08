@@ -2,15 +2,20 @@
 # exit on error
 set -o errexit
 
+echo "Starting build process..."
+
 # Install dependencies
+echo "Installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Install production server
-pip install gunicorn whitenoise python-dotenv
-
+echo "Collecting static files..."
 # Collect static files
-python StockPricePrediction/manage.py collectstatic --no-input
+cd StockPricePrediction
+python manage.py collectstatic --no-input
 
+echo "Running migrations..."
 # Run migrations
-python StockPricePrediction/manage.py migrate
+python manage.py migrate --no-input
+
+echo "Build complete!"

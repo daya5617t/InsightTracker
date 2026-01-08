@@ -14,7 +14,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-@$tc)=hz2lchossc1-98q)2jj)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Parse ALLOWED_HOSTS
+allowed_hosts_str = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
+# Add Render domain if not present
+if not any('.onrender.com' in host for host in ALLOWED_HOSTS):
+    ALLOWED_HOSTS.extend(['*.onrender.com', '.onrender.com'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -66,12 +71,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'StockPricePrediction.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR.parent / 'data' / 'database' / 'db.sqlite3',
+# Use PostgreSQL in production if DATABASE_URL is set, otherwise SQLite
+import dj_database_url
+
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR.parent / 'data' / 'database' / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
